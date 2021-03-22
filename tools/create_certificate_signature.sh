@@ -24,7 +24,7 @@ openssl base64 -in sig.tmp -out signature.base64 -A
 echo ... saved to signature.base64
 signature=$(cat signature.base64)
 
-cert_base64=$(cat ${certFileName} | base64)
+cert_base64=$(cat ${certFileName} | openssl base64 -A)
 #echo $cert_base64
 
 openssl x509 -fingerprint -sha256 -in ${certFileName} -noout > fingerprint.sha256
@@ -49,8 +49,13 @@ purpose='SIGNING'
 fi
 
 
-template="INSERT INTO certificate VALUES(NULL, '$currentdate', '$fingerprint', '$country', '$purpose', FALSE, NULL, '$signature', FROM_BASE64('$cert_base64'))";
-echo $template > insert.sql
+#Postgres DB-Query template
+template_pgsql="INSERT INTO certificate VALUES(DEFAULT, '$currentdate', '$fingerprint', '$country', '$purpose', FALSE, NULL, '$signature', convert_from(decode('$cert_base64', 'base64'), 'utf-8'))";
+echo $template_pgsql > template_pgsql.sql
+
+#Mysql DB-Query template
+template_mysql="INSERT INTO certificate VALUES(NULL, '$currentdate', '$fingerprint', '$country', '$purpose', FALSE, NULL, '$signature', FROM_BASE64('$cert_base64'))";
+echo $template_mysql > template_mysql.sql
 
 echo [4 of 4] Cleaning up...
 rm sig.tmp
