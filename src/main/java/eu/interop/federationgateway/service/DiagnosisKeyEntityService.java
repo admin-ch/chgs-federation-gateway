@@ -68,7 +68,6 @@ public class DiagnosisKeyEntityService {
    * @param diagnosisKeyEntities the diagnosis key entities
    * @throws DiagnosisKeyInsertException will be thrown if an error occurred during insertion.
    */
-  @Transactional(rollbackOn = DiagnosisKeyInsertException.class)
   public void saveDiagnosisKeyEntities(
     List<DiagnosisKeyEntity> diagnosisKeyEntities
   ) throws DiagnosisKeyInsertException {
