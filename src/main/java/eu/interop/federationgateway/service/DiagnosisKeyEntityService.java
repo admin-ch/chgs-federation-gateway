@@ -81,13 +81,17 @@ public class DiagnosisKeyEntityService {
     
     List<String> hashes = 
                 diagnosisKeyEntities.stream().map((key) -> key.getPayloadHash()).collect(Collectors.toList());
-    List<DiagnosisKeyEntity> duplicates = diagnosisKeyEntityRepository.getDiagnosisKeysByHash(hashes);
+    List<String> duplicates = diagnosisKeyEntityRepository
+                    .getDiagnosisKeysByHash(hashes)
+                    .stream()
+                    .map((k) -> k.getPayloadHash()).collect(Collectors.toList());
 
     for (int index = 0; index < diagnosisKeyEntities.size(); index++) {
       DiagnosisKeyEntity key = diagnosisKeyEntities.get(index);
 
-      if (duplicates.contains(key)) {
+      if (duplicates.contains(key.getPayloadHash())) {
         resultMap.get(409).add(index);
+        
         continue;
       } 
 

@@ -69,7 +69,6 @@ import org.springframework.web.context.WebApplicationContext;
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
-@ActiveProfiles("psql")
 @ContextConfiguration(classes = EfgsTestKeyStore.class)
 public class UploadControllerTest {
 
@@ -169,13 +168,13 @@ public class UploadControllerTest {
 
   @Test
   public void testServerHandlesDuplicatesCorrectly() throws Exception {
-      EfgsProto.DiagnosisKey key1 = buildKey(1);
-      EfgsProto.DiagnosisKey key2 = buildKey(2);
-      EfgsProto.DiagnosisKey key3 = buildKey(3);
+    EfgsProto.DiagnosisKey key1 = buildKey(1);
+    EfgsProto.DiagnosisKey key2 = buildKey(2);
+    EfgsProto.DiagnosisKey key3 = buildKey(3);
 
-      EfgsProto.DiagnosisKey key4 = buildKey(4);
-      EfgsProto.DiagnosisKey key5 = buildKey(5);
-      EfgsProto.DiagnosisKeyBatch batch = EfgsProto.DiagnosisKeyBatch.newBuilder()
+    EfgsProto.DiagnosisKey key4 = buildKey(4);
+    EfgsProto.DiagnosisKey key5 = buildKey(5);
+    EfgsProto.DiagnosisKeyBatch batch = EfgsProto.DiagnosisKeyBatch.newBuilder()
       .addAllKeys(Arrays.asList(key1, key2, key3)).build();
 
     byte[] bytesToSign = BatchSignatureUtilsTest.createBytesToSign(batch);
@@ -188,7 +187,7 @@ public class UploadControllerTest {
       .header(properties.getCertAuth().getHeaderFields().getThumbprint(), TestData.AUTH_CERT_HASH)
       .header(properties.getCertAuth().getHeaderFields().getDistinguishedName(), TestData.DN_STRING_DE)
       .content(batch.toByteArray())
-    ) .andExpect(status().isCreated())
+    ).andExpect(status().isCreated())
       .andExpect(result -> Assert.assertEquals(batch.getKeysCount(), diagnosisKeyEntityRepository.count()));
 
     EfgsProto.DiagnosisKeyBatch batch2 = EfgsProto.DiagnosisKeyBatch.newBuilder()
@@ -206,7 +205,8 @@ public class UploadControllerTest {
       .content(batch2.toByteArray())
     )
       .andExpect(status().is(207))
-      .andExpect(result -> Assert.assertEquals(batch2.getKeysCount()-1 + batch.getKeysCount(), diagnosisKeyEntityRepository.count() ));
+      .andExpect(result -> 
+        Assert.assertEquals(batch2.getKeysCount() - 1 + batch.getKeysCount(), diagnosisKeyEntityRepository.count()));
   }
 
   @Test
