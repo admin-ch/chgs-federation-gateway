@@ -1,4 +1,4 @@
-package eu.interop.federationgateway.controller.mysql;
+package eu.interop.federationgateway.controller.postgres;
 
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -12,12 +12,12 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 import eu.interop.federationgateway.controller.UploadControllerTest;
 
-@ActiveProfiles("mysql")
-@ContextConfiguration(initializers = {UploadControllerMysqlTest.Initializer.class})
+@ActiveProfiles("psql")
+@ContextConfiguration(initializers = {UploadControllerPsqlTest.Initializer.class})
 
-public class UploadControllerMysqlTest extends UploadControllerTest {
+public class UploadControllerPsqlTest extends UploadControllerTest {
   @ClassRule
-  public static MySQLContainer mySQLContainer = new MySQLContainer("mysql:5.7")
+  public static PostgreSQLContainer mySQLContainer = new PostgreSQLContainer("postgres:10")
     .withDatabaseName("fg")
     .withUsername("sa")
     .withPassword("sa");

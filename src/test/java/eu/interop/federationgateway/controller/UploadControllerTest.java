@@ -167,49 +167,6 @@ public class UploadControllerTest {
   }
 
   @Test
-  public void testServerHandlesDuplicatesCorrectly() throws Exception {
-    EfgsProto.DiagnosisKey key1 = buildKey(1);
-    EfgsProto.DiagnosisKey key2 = buildKey(2);
-    EfgsProto.DiagnosisKey key3 = buildKey(3);
-
-    EfgsProto.DiagnosisKey key4 = buildKey(4);
-    EfgsProto.DiagnosisKey key5 = buildKey(5);
-    EfgsProto.DiagnosisKeyBatch batch = EfgsProto.DiagnosisKeyBatch.newBuilder()
-      .addAllKeys(Arrays.asList(key1, key2, key3)).build();
-
-    byte[] bytesToSign = BatchSignatureUtilsTest.createBytesToSign(batch);
-    String signature = signatureGenerator.sign(bytesToSign, TestData.validCertificate);
-
-    mockMvc.perform(post("/diagnosiskeys/upload")
-      .contentType("application/protobuf; version=1.0")
-      .header("batchTag", TestData.FIRST_BATCHTAG)
-      .header("batchSignature", signature)
-      .header(properties.getCertAuth().getHeaderFields().getThumbprint(), TestData.AUTH_CERT_HASH)
-      .header(properties.getCertAuth().getHeaderFields().getDistinguishedName(), TestData.DN_STRING_DE)
-      .content(batch.toByteArray())
-    ).andExpect(status().isCreated())
-      .andExpect(result -> Assert.assertEquals(batch.getKeysCount(), diagnosisKeyEntityRepository.count()));
-
-    EfgsProto.DiagnosisKeyBatch batch2 = EfgsProto.DiagnosisKeyBatch.newBuilder()
-      .addAllKeys(Arrays.asList(key4, key5, key1)).build();
-
-    byte[] bytesToSign2 = BatchSignatureUtilsTest.createBytesToSign(batch2);
-    String signature2 = signatureGenerator.sign(bytesToSign2, TestData.validCertificate);
-
-    mockMvc.perform(post("/diagnosiskeys/upload")
-      .contentType("application/protobuf; version=1.0")
-      .header("batchTag", TestData.SECOND_BATCHTAG)
-      .header("batchSignature", signature2)
-      .header(properties.getCertAuth().getHeaderFields().getThumbprint(), TestData.AUTH_CERT_HASH)
-      .header(properties.getCertAuth().getHeaderFields().getDistinguishedName(), TestData.DN_STRING_DE)
-      .content(batch2.toByteArray())
-    )
-      .andExpect(status().is(207))
-      .andExpect(result -> 
-        Assert.assertEquals(batch2.getKeysCount() - 1 + batch.getKeysCount(), diagnosisKeyEntityRepository.count()));
-  }
-
-  @Test
   public void testRequestUploadKeysInProtobufFormatWithModifiedCertDatabase() throws Exception {
     EfgsProto.DiagnosisKey key1 = buildKey(1, TestData.COUNTRY_A);
     EfgsProto.DiagnosisKey key2 = buildKey(2, TestData.COUNTRY_A);
@@ -245,6 +202,7 @@ public class UploadControllerTest {
   public void testRequestUploadKeysExistingHashInProtobufFormat() throws Exception {
     EfgsProto.DiagnosisKey key1 = buildKey(1);
     EfgsProto.DiagnosisKey key2 = buildKey(2);
+    EfgsProto.DiagnosisKey key3 = buildKey(3);
 
     EfgsProto.DiagnosisKeyBatch batch1 = EfgsProto.DiagnosisKeyBatch.newBuilder()
       .addAllKeys(Arrays.asList(key1)).build();
@@ -253,7 +211,7 @@ public class UploadControllerTest {
     String signatureBatch1 = signatureGenerator.sign(bytesToSign, TestData.validCertificate);
 
     EfgsProto.DiagnosisKeyBatch batch2 = EfgsProto.DiagnosisKeyBatch.newBuilder()
-      .addAllKeys(Arrays.asList(key1, key2)).build();
+      .addAllKeys(Arrays.asList(key2, key3, key1)).build();
 
     bytesToSign = BatchSignatureUtilsTest.createBytesToSign(batch2);
     String signatureBatch2 = signatureGenerator.sign(bytesToSign, TestData.validCertificate);
@@ -277,7 +235,8 @@ public class UploadControllerTest {
     )
       .andExpect(status().isMultiStatus())
       .andExpect(result -> {
-        Assert.assertEquals(1, diagnosisKeyEntityRepository.count());
+        
+        Assert.assertEquals(3, diagnosisKeyEntityRepository.count());
 
         JsonParser jsonParser = JsonParserFactory.getJsonParser();
         Map<String, Object> map = jsonParser.parseMap(result.getResponse().getContentAsString());
@@ -287,8 +246,8 @@ public class UploadControllerTest {
 
         Assert.assertTrue(list500.isEmpty());
         Assert.assertTrue(list201.contains(1));
-        Assert.assertTrue(list409.contains(0));
-        Assert.assertEquals(1, list201.size());
+        Assert.assertTrue(list409.contains(2));
+        Assert.assertEquals(2, list201.size());
         Assert.assertEquals(1, list409.size());
       });
   }
